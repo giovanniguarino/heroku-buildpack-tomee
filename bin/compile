@@ -74,10 +74,15 @@ cd $BUILD_DIR
 TOMEE_URL="http://www.trieuvan.com/apache/openejb/openejb-$OPENEJB_VERSION/apache-tomee-$TOMEE_VERSION-webprofile.tar.gz"
 echo "-----> Bundling TomEE version $TOMEE_VERSION"
 curl --silent --location "$TOMEE_URL" | tar xz
+rm -fr $BUILD_DIR/apache-tomee-webprofile-$TOMEE_VERSION/webapps/*
 
 
 cat >>boot.sh <<EOF
+# Only one port is allowed
 sed -i "s/8080/\$PORT/g" ~/apache-tomee-webprofile-$TOMEE_VERSION/conf/server.xml
+sed -i "s/8005/-1/g"     ~/apache-tomee-webprofile-$TOMEE_VERSION/conf/server.xml
+sed -i "s/.*8009.*//g"   ~/apache-tomee-webprofile-$TOMEE_VERSION/conf/server.xml
+
 mv ~/target/*.war ~/apache-tomee-webprofile-$TOMEE_VERSION/webapps/ROOT.war
 ~/apache-tomee-webprofile-$TOMEE_VERSION/bin/catalina.sh run
 EOF
