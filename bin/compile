@@ -26,6 +26,12 @@ install_java ${BUILD_DIR} ${javaVersion}
 jdk_overlay ${BUILD_DIR}
 echo "done"
 
+#create the cache dir if it doesn't exist
+mkdir -p $CACHE_DIR
+
+# change to cache dir to install maven
+cd $CACHE_DIR
+
 # install maven with base repository
 MAVEN_URL="http://s3.amazonaws.com/heroku-jvm-langpack-java/maven.tar.gz"
 
@@ -34,11 +40,6 @@ curl --silent --max-time 60 --location $MAVEN_URL | tar xz
 chmod +x .maven/bin/mvn
 echo " done"
 
-#create the cache dir if it doesn't exist
-mkdir -p $CACHE_DIR
-
-# change to cache dir to install maven
-cd $CACHE_DIR
 
 MAVEN_SETTINGS_URL="http://s3.amazonaws.com/heroku-jvm-langpack-java/settings.xml"
 
