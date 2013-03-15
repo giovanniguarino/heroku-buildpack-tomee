@@ -5,59 +5,41 @@
 set -e
 
 # config
-APACHE_VERSION="2.2.22"
-APACHE_PATH="apache"
-PHP_VERSION="5.3.10"
-PHP_PATH="php"
+OPENEJB_VERSION="4.5.1"
+TOMEE_VERSION="1.5.1"
 
 BIN_DIR=$(dirname $0)
 BUILD_DIR=$1
 CACHE_DIR=$2
 LP_DIR=`cd $(dirname $0); cd ..; pwd`
 
+curl --silent --location http://heroku-jvm-common.s3.amazonaws.com/jvm-buildpack-common.tar.gz | tar xz
+. bin/java
+
+echo "java.runtime.version=1.7" > ${BUILD_DIR}/system.properties
+
+logger -p user.notice -t "slugc[$$]" "language_pack_java download_jdk"
+LOGGER_FLAGS="$LOGGER_FLAGS download_jdk"
+javaVersion=$(detect_java_version ${BUILD_DIR})
+echo -n "-----> Installing OpenJDK ${javaVersion}..."
+install_java ${BUILD_DIR} ${javaVersion}
+jdk_overlay ${BUILD_DIR}
+echo "done"
+cp ${BUILD_DIR}/system.properties ${CACHE_DIR}/
+
 # include .files when moving things around
 shopt -s dotglob
 
 cd $BUILD_DIR
 
-# move app things to www
-mkdir -p $CACHE_DIR/www
-mv * $CACHE_DIR/www
-mv $CACHE_DIR/www .
-
-# keep Procfile
-if [ -f www/Procfile ]; then
-  mv www/Procfile .
-fi
-
-APACHE_URL="https://s3.amazonaws.com/php-lp/apache-$APACHE_VERSION.tar.gz"
-echo "-----> Bundling Apache version $APACHE_VERSION"
-curl --silent --max-time 60 --location "$APACHE_URL" | tar xz
-
-PHP_URL="https://s3.amazonaws.com/php-lp/php-$PHP_VERSION.tar.gz"
-echo "-----> Bundling PHP version $PHP_VERSION"
-curl --silent --max-time 60 --location "$PHP_URL" | tar xz
-
-# update config files
-cp $LP_DIR/conf/httpd.conf $APACHE_PATH/conf
-cp $LP_DIR/conf/php.ini php
-
-# make php available on bin
-mkdir -p bin
-ln -s /app/php/bin/php bin/php
+TOMEE_URL="http://www.trieuvan.com/apache/openejb/openejb-$OPENEJB_VERSION/apache-tomee-$TOMEE_VERSION-webprofile.tar.gz"
+echo "-----> Bundling TomEE version $TOMEE_VERSION"
+curl --silent --location "$TOMEE_URL" | tar xz
 
 cat >>boot.sh <<EOF
-for var in \`env|cut -f1 -d=\`; do
-  echo "PassEnv \$var" >> /app/apache/conf/httpd.conf;
-done
-touch /app/apache/logs/error_log
-touch /app/apache/logs/access_log
-tail -F /app/apache/logs/error_log &
-tail -F /app/apache/logs/access_log &
-export LD_LIBRARY_PATH=/app/php/ext
-export PHP_INI_SCAN_DIR=/app/www
-echo "Launching apache"
-exec /app/apache/bin/httpd -DNO_DETACH
+mvn package
+mv ~/target/*.war ~/apache-tomee-webprofile-$TOMEE_VERSION/webapps/ROOT.war
+~/apache-tomee-webprofile-$TOMEE_VERSION/bin/catalina.sh run
 EOF
 
 chmod +x boot.sh
