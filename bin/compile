@@ -54,6 +54,13 @@ export MAVEN_OPTS="-Xmx512m"
 BUILDCMD="$CACHE_DIR/.maven/bin/mvn -B -Duser.home=$BUILD_DIR -Dmaven.repo.local=$CACHE_DIR/.m2/repository -s $CACHE_DIR/.m2/settings.xml -DskipTests=true clean install package"
 echo "-----> executing $BUILDCMD"
 
+$BUILDCMD 2>&1 | sed -u 's/^/       /'
+
+if [ "${PIPESTATUS[*]}" != "0 0" ]; then
+  echo " !     Failed to build app with Maven"
+  exit 1
+fi
+
 # include .files when moving things around
 shopt -s dotglob
 
@@ -62,10 +69,13 @@ cd $BUILD_DIR
 TOMEE_URL="http://www.trieuvan.com/apache/openejb/openejb-$OPENEJB_VERSION/apache-tomee-$TOMEE_VERSION-webprofile.tar.gz"
 echo "-----> Bundling TomEE version $TOMEE_VERSION"
 curl --silent --location "$TOMEE_URL" | tar xz
+ln -s $BUILD_DIR/apache-tomee-webprofile-$TOMEE_VERSION $BUILD_DIR/tomee
+
 
 cat >>boot.sh <<EOF
-mv ~/target/*.war ~/apache-tomee-webprofile-$TOMEE_VERSION/webapps/ROOT.war
-~/apache-tomee-webprofile-$TOMEE_VERSION/bin/catalina.sh run
+set -i "s/8080/$PORT/g" ~/tomee/server.xml
+mv ~/target/*.war ~/tomee/webapps/ROOT.war
+~/tomee/bin/catalina.sh run
 EOF
 
 chmod +x boot.sh
