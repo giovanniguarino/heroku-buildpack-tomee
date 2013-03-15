@@ -77,7 +77,7 @@ curl --silent --location "$TOMEE_URL" | tar xz
 
 
 cat >>boot.sh <<EOF
-set -i "s/8080/$PORT/g" ~/apache-tomee-webprofile-$TOMEE_VERSION/conf/server.xml
+sed -i "s/8080/$PORT/g" ~/apache-tomee-webprofile-$TOMEE_VERSION/conf/server.xml
 mv ~/target/*.war ~/apache-tomee-webprofile-$TOMEE_VERSION/webapps/ROOT.war
 ~/apache-tomee-webprofile-$TOMEE_VERSION/bin/catalina.sh run
 EOF
