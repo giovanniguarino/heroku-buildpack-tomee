@@ -66,18 +66,6 @@ if [ "${PIPESTATUS[*]}" != "0 0" ]; then
   exit 1
 fi
 
-# finalize cache
-if [ "false" == $KEEP_M2_CACHE ]; then
-  touch $CACHE_DIR/removeM2Cache
-fi
-
-#copy .m2 and .maven if needed
-if [ "true" == $KEEP_M2_CACHE ]; then
-  for DIR in ".m2" ".maven" ; do
-    cp -r $CACHE_DIR/$DIR $DIR
-  done
-fi
-
 # include .files when moving things around
 shopt -s dotglob
 
@@ -86,13 +74,12 @@ cd $BUILD_DIR
 TOMEE_URL="http://www.trieuvan.com/apache/openejb/openejb-$OPENEJB_VERSION/apache-tomee-$TOMEE_VERSION-webprofile.tar.gz"
 echo "-----> Bundling TomEE version $TOMEE_VERSION"
 curl --silent --location "$TOMEE_URL" | tar xz
-ln -s $BUILD_DIR/apache-tomee-webprofile-$TOMEE_VERSION $BUILD_DIR/tomee
 
 
 cat >>boot.sh <<EOF
-set -i "s/8080/$PORT/g" ~/tomee/server.xml
-mv ~/target/*.war ~/tomee/webapps/ROOT.war
-~/tomee/bin/catalina.sh run
+set -i "s/8080/$PORT/g" ~/apache-tomee-webprofile-$TOMEE_VERSION/server.xml
+mv ~/target/*.war ~/apache-tomee-webprofile-$TOMEE_VERSION/webapps/ROOT.war
+~/apache-tomee-webprofile-$TOMEE_VERSION/bin/catalina.sh run
 EOF
 
 chmod +x boot.sh
