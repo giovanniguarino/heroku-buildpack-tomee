@@ -34,6 +34,9 @@ curl --silent --max-time 60 --location $MAVEN_URL | tar xz
 chmod +x .maven/bin/mvn
 echo " done"
 
+#create the cache dir if it doesn't exist
+mkdir -p $CACHE_DIR
+
 # change to cache dir to install maven
 cd $CACHE_DIR
 
