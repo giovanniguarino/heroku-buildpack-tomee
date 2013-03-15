@@ -34,6 +34,9 @@ curl --silent --max-time 60 --location $MAVEN_URL | tar xz
 chmod +x .maven/bin/mvn
 echo " done"
 
+# change to cache dir to install maven
+cd $CACHE_DIR
+
 MAVEN_SETTINGS_URL="http://s3.amazonaws.com/heroku-jvm-langpack-java/settings.xml"
 
 echo -n "-----> Installing settings.xml..."
@@ -49,7 +52,7 @@ cd $BUILD_DIR
 export MAVEN_OPTS="-Xmx512m"
 
 # build app
-BUILDCMD="$BIN_DIR/.maven/bin/mvn -B -Duser.home=$BUILD_DIR -Dmaven.repo.local=$BUILD_DIR/.m2/repository -s $BUILD_DIR/.m2/settings.xml -DskipTests=true clean install package"
+BUILDCMD="$CACHE_DIR/.maven/bin/mvn -B -Duser.home=$BUILD_DIR -Dmaven.repo.local=$CACHE_DIR/.m2/repository -s $CACHE_DIR/.m2/settings.xml -DskipTests=true clean install"
 echo "-----> executing $BUILDCMD"
 
 $BUILDCMD 2>&1 | sed -u 's/^/       /'
@@ -57,6 +60,18 @@ $BUILDCMD 2>&1 | sed -u 's/^/       /'
 if [ "${PIPESTATUS[*]}" != "0 0" ]; then
   echo " !     Failed to build app with Maven"
   exit 1
+fi
+
+# finalize cache
+if [ "false" == $KEEP_M2_CACHE ]; then
+  touch $CACHE_DIR/removeM2Cache
+fi
+
+#copy .m2 and .maven if needed
+if [ "true" == $KEEP_M2_CACHE ]; then
+  for DIR in ".m2" ".maven" ; do
+    cp -r $CACHE_DIR/$DIR $DIR
+  done
 fi
 
 # include .files when moving things around
