@@ -5,7 +5,6 @@
 set -e
 
 # config
-OPENEJB_VERSION="4.5.1"
 TOMEE_VERSION="1.5.1"
 
 BIN_DIR=$(dirname $0)
@@ -71,7 +70,7 @@ shopt -s dotglob
 
 cd $BUILD_DIR
 
-TOMEE_URL="http://www.trieuvan.com/apache/openejb/openejb-$OPENEJB_VERSION/apache-tomee-$TOMEE_VERSION-webprofile.tar.gz"
+TOMEE_URL="http://repo1.maven.org/maven2/org/apache/openejb/apache-tomee/$TOMEE_VERSION/apache-tomee-$TOMEE_VERSION-webprofile.tar.gz"
 echo "-----> Bundling TomEE version $TOMEE_VERSION"
 curl --silent --location "$TOMEE_URL" | tar xz
 rm -fr $BUILD_DIR/apache-tomee-webprofile-$TOMEE_VERSION/webapps/*
