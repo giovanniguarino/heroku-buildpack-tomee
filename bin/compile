@@ -5,7 +5,7 @@
 set -e
 
 # config
-TOMEE_VERSION="1.5.1"
+TOMEE_VERSION="1.7.0"
 
 BIN_DIR=$(dirname $0)
 BUILD_DIR=$1
@@ -32,9 +32,9 @@ mkdir -p $CACHE_DIR
 cd $CACHE_DIR
 
 # install maven with base repository
-MAVEN_URL="http://s3.amazonaws.com/heroku-jvm-langpack-java/maven.tar.gz"
+MAVEN_URL="http://www.us.apache.org/dist/maven/maven-3/3.2.3/binaries/apache-maven-3.2.3-bin.tar.gz"
 
-echo -n "-----> Installing Maven 3.0.3..."
+echo -n "-----> Installing Maven 3.2.3..."
 curl --silent --max-time 60 --location $MAVEN_URL | tar xz
 chmod +x .maven/bin/mvn
 echo " done"
@@ -70,20 +70,20 @@ shopt -s dotglob
 
 cd $BUILD_DIR
 
-TOMEE_URL="http://repo1.maven.org/maven2/org/apache/openejb/apache-tomee/$TOMEE_VERSION/apache-tomee-$TOMEE_VERSION-webprofile.tar.gz"
+TOMEE_URL="http://repo1.maven.org/maven2/org/apache/openejb/apache-tomee/$TOMEE_VERSION/apache-tomee-$TOMEE_VERSION-plus.tar.gz"
 echo "-----> Bundling TomEE version $TOMEE_VERSION"
 curl --silent --location "$TOMEE_URL" | tar xz
-rm -fr $BUILD_DIR/apache-tomee-webprofile-$TOMEE_VERSION/webapps/*
+rm -fr $BUILD_DIR/apache-tomee-plus-$TOMEE_VERSION/webapps/*
 
 
 cat >>boot.sh <<EOF
 # Only one port is allowed
-sed -i "s/8080/\$PORT/g" ~/apache-tomee-webprofile-$TOMEE_VERSION/conf/server.xml
-sed -i "s/8005/-1/g"     ~/apache-tomee-webprofile-$TOMEE_VERSION/conf/server.xml
-sed -i "s/.*8009.*//g"   ~/apache-tomee-webprofile-$TOMEE_VERSION/conf/server.xml
+sed -i "s/8080/\$PORT/g" ~/apache-tomee-plus-$TOMEE_VERSION/conf/server.xml
+sed -i "s/8005/-1/g"     ~/apache-tomee-plus-$TOMEE_VERSION/conf/server.xml
+sed -i "s/.*8009.*//g"   ~/apache-tomee-plus-$TOMEE_VERSION/conf/server.xml
 
-mv ~/target/*.war ~/apache-tomee-webprofile-$TOMEE_VERSION/webapps/ROOT.war
-~/apache-tomee-webprofile-$TOMEE_VERSION/bin/catalina.sh run
+mv ~/target/*.war ~/apache-tomee-plus-$TOMEE_VERSION/webapps/ROOT.war
+~/apache-tomee-plus-$TOMEE_VERSION/bin/catalina.sh run
 EOF
 
 chmod +x boot.sh
